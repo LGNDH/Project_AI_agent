@@ -1,6 +1,7 @@
 def main():
     import os
     from dotenv import load_dotenv
+    from functions import generate_content
     import argparse
     from google import genai
     from google.genai import types
@@ -14,9 +15,9 @@ def main():
         raise RuntimeError("No api_key found")
 
 
-    
     #create a gemini client
     client = genai.Client(api_key=api_key)
+
 
     #prompt from user, using argparse
     parser = argparse.ArgumentParser(description="AI_agent")
@@ -24,22 +25,17 @@ def main():
     args = parser.parse_args()
 
 
-    #Prompt to client
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=args.Agent_request
-    )
-    if response.usage_metadata == None:
-        raise RuntimeError("Failed api request")
+    #Saving User's imputs
+    messages = [types.Content(role="user", parts=[types.Part(text=args.Agent_request)])]
+    
+    #call generate content function
+    response = generate_content(client, messages)
     
     #printing answer and to terminal
     print("Prompt tokens: ", response.usage_metadata.prompt_token_count)
     print("Response tokens: ", response.usage_metadata.candidates_token_count)
     print(response.text)
-    
-    #Saving User's imputs
-    messages = 
-    
+
 
 if __name__ == "__main__":
     main()
