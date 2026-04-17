@@ -1,7 +1,7 @@
 def main():
     import os
     from dotenv import load_dotenv
-    from functions import generate_content
+    from functions.generate_content import generate_content
     import argparse
     from google import genai
     from google.genai import types
