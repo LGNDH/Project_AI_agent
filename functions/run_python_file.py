@@ -1,5 +1,29 @@
 import os
 import subprocess
+from google import genai
+from google.genai import types
+
+#function declaration run_python_file
+schema_run_python_file = types.FunctionDeclaration(
+    name="run_python_file",
+    description="Execute Python files with optional arguments",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        required=["file_path"],
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="File path to a file from, relative to the working directory",
+            ),
+             "args": types.Schema(
+                type=types.Type.ARRAY,
+                description="Optional arguments to run the python file, default None ",
+                items=types.Schema(type=types.Type.STRING)
+            ),
+        },
+    ),
+)
+
 
 def run_python_file(working_directory, file_path, args=None):
     try:

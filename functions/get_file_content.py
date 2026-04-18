@@ -1,5 +1,23 @@
 import os
 from config import size_file_read
+from google import genai
+from google.genai import types
+
+#function declaration get_file_content
+schema_get_file_content = types.FunctionDeclaration(
+    name="get_file_content",
+    description="Reads the file, providing first 10000 characters from the file",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        required=["file_path"],
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="File path to a file from, relative to the working directory",
+            ),
+        },
+    ),
+)
 
 # function to read a file
 def get_file_content(working_directory, file_path):
