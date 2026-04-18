@@ -2,6 +2,7 @@ def main():
     import os
     from dotenv import load_dotenv
     from functions.generate_content import generate_content
+    from functions.call_function import call_function
     import argparse
     from google import genai
     from google.genai import types
@@ -29,21 +30,43 @@ def main():
     #Saving User's imputs
     messages = [types.Content(role="user", parts=[types.Part(text=args.Agent_request)])]
     
-    #call generate content function
-    response = generate_content(client, messages)
-    
-    #printing answer to terminal and if verbose arg true aditional data
-    if args.verbose == True:
-        print("User prompt: ", args.Agent_request)
-        print("Prompt tokens: ", response.usage_metadata.prompt_token_count)
-        print("Response tokens: ", response.usage_metadata.candidates_token_count)
+    for _ in range(20):
+        #call generate content function
+        response = generate_content(client, messages)
 
-    if response.function_calls != None:
-        for call in response.function_calls:
-            print(f"Calling function: {call.name}({call.args})")
-    else:
-        print(response.text)
+        #making sure that agent have previous responses avaiable
+        for item in response.candidates:
+            messages.append(item.content)
 
+        #output to console
+        if args.verbose == True:
+            print("User prompt: ", args.Agent_request)
+            print("Prompt tokens: ", response.usage_metadata.prompt_token_count)
+            print("Response tokens: ", response.usage_metadata.candidates_token_count)
+
+       
+        functions_result_list = []
+        if response.function_calls != None:
+            for call in response.function_calls:
+                function_call_result = call_function(call, verbose=args.verbose)
+                if function_call_result.parts == []:
+                    raise Exception("Error: function_call_result.parts is empty")
+                if function_call_result.parts[0].function_response == None:
+                    raise Exception("Error: function_call_result.parts[0].function_response is None")
+                if function_call_result.parts[0].function_response.response == None:
+                    raise Exception("Error: function_call_result.parts[0].function_response.response is None")
+                else:
+                    functions_result_list.append(function_call_result.parts[0])
+                if args.verbose == True:
+                    print(f"-> {function_call_result.parts[0].function_response.response}")
+                messages.append(types.Content(role="user", parts=functions_result_list))
+        
+        else:   
+            print(response.text)
+            break
+        if _ == 20:
+            print("Error: AI agent went through maximum number of repeated calls")
+            sys.exit(1)
 
 if __name__ == "__main__":
     main()
